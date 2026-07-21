@@ -93,6 +93,34 @@ def delete_task(task_id):
     return redirect(url_for('faculty.dashboard'))
 
 
+@faculty_bp.route('/tasks/<int:task_id>/edit', methods=['POST'])
+@role_required('faculty')
+def edit_task(task_id):
+    faculty = get_current_faculty()
+    task = Task.query.filter_by(id=task_id, faculty_id=faculty.id).first_or_404()
+
+    title = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
+    deadline_str = request.form.get('deadline')
+    priority = request.form.get('priority', 'Medium')
+
+    try:
+        deadline = datetime.strptime(deadline_str, '%Y-%m-%dT%H:%M')
+    except (ValueError, TypeError):
+        flash('Invalid deadline format.', 'danger')
+        return redirect(url_for('faculty.dashboard'))
+
+    task.title = title
+    task.description = description
+    task.deadline = deadline
+    task.priority = priority
+
+    db.session.commit()
+    flash(f'Task "{title}" updated successfully!', 'success')
+    return redirect(url_for('faculty.dashboard'))
+
+
+
 @faculty_bp.route('/tasks/<int:task_id>/status')
 @role_required('faculty')
 def task_status(task_id):
