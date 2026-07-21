@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - Smart Reminder System{% endblock %}
+{% block header_title %}My Assigned Reminders & Tasks{% endblock %}
+
+{% block content %}
+<!-- Student Profile & Stat Bar -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card primary">
+            <div class="h6 text-white-50 text-uppercase fw-semibold">Assigned Reminders</div>
+            <div class="display-5 fw-bold mb-0">{{ total_assigned }}</div>
+            <div class="small mt-2"><i class="fa-solid fa-graduation-cap me-1"></i> Class {{ student.class_assigned.class_code }}</div>
+            <i class="fa-solid fa-bell icon-bg"></i>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card warning">
+            <div class="h6 text-white-50 text-uppercase fw-semibold">Pending Tasks</div>
+            <div class="display-5 fw-bold mb-0">{{ total_pending }}</div>
+            <div class="small mt-2"><i class="fa-regular fa-clock me-1"></i> Action required</div>
+            <i class="fa-solid fa-hourglass-start icon-bg"></i>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card success">
+            <div class="h6 text-white-50 text-uppercase fw-semibold">Completed Tasks</div>
+            <div class="display-5 fw-bold mb-0">{{ total_completed }}</div>
+            <div class="small mt-2"><i class="fa-solid fa-circle-check me-1"></i> Submitted tasks</div>
+            <i class="fa-solid fa-check-double icon-bg"></i>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card secondary">
+            <div class="h6 text-white-50 text-uppercase fw-semibold">Notifications</div>
+            <div class="display-5 fw-bold mb-0">{{ notifications|length }}</div>
+            <div class="small mt-2"><i class="fa-solid fa-envelope me-1"></i> In-app alerts</div>
+            <i class="fa-solid fa-bell-concierge icon-bg"></i>
+        </div>
+    </div>
+</div>
+
+<!-- In-App Notifications Banner if any -->
+{% if notifications %}
+<div class="card border-0 shadow-sm rounded-4 mb-4 bg-primary text-white p-3" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="fw-bold"><i class="fa-solid fa-bell me-2"></i>Recent Notifications</div>
+        <form action="{{ url_for('student.clear_notifications') }}" method="POST">
+            <button type="submit" class="btn btn-sm btn-outline-light rounded-3 py-0 px-2">Mark all as read</button>
+        </form>
+    </div>
+    <ul class="mb-0 ps-3 small">
+        {% for notif in notifications %}
+        <li>{{ notif.message }} ({{ notif.created_at.strftime('%b %d') }})</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<!-- Filters & Section Title -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h5 class="fw-bold mb-1">Active Pending Reminders</h5>
+        <p class="text-muted small mb-0">Prioritize tasks by deadline and update completion status</p>
+    </div>
+    <div class="d-flex gap-2">
+        <select id="priorityFilter" class="form-select form-select-sm rounded-3">
+            <option value="all">Filter by Priority: All</option>
+            <option value="Urgent">Urgent Priority</option>
+            <option value="High">High Priority</option>
+            <option value="Medium">Medium Priority</option>
+            <option value="Low">Low Priority</option>
+        </select>
+    </div>
+</div>
+
+<!-- Task Cards Grid -->
+<div class="row g-3">
+    {% for status in pending_tasks %}
+    {% set task = status.task %}
+    <div class="col-md-6 col-lg-4 task-item" data-priority="{{ task.priority }}">
+        <div class="card border-0 shadow-sm rounded-4 h-100 task-card">
+            <div class="card-body p-4 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge bg-indigo text-white px-2.5 py-1" style="background: #6366f1;">
+                        {{ task.class_assigned.class_code }}
+                    </span>
+                    <span class="badge badge-priority-{{ task.priority }} px-2.5 py-1">
+                        {{ task.priority }}
+                    </span>
+                </div>
+
+                <h5 class="fw-bold text-slate-900 mb-2 mt-1">{{ task.title }}</h5>
+                <p class="text-slate-600 small flex-grow-1 mb-3">{{ task.description or 'No extra details provided.' }}</p>
+
+                <div class="p-3 bg-light rounded-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center small mb-1">
+                        <span class="text-muted"><i class="fa-solid fa-user-tie me-1"></i>Faculty:</span>
+                        <span class="fw-semibold text-dark">{{ task.faculty.user.full_name }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center small">
+                        <span class="text-muted"><i class="fa-regular fa-clock me-1 text-primary"></i>Deadline:</span>
+                        <span class="fw-bold text-danger">{{ task.deadline.strftime('%b %d, %Y %I:%M %p') }}</span>
+                    </div>
+                </div>
+
+                <!-- Complete Task Form -->
+                <form action="{{ url_for('student.toggle_task_status', status_id=status.id) }}" method="POST">
+                    <div class="mb-2">
+                        <input type="text" name="remarks" class="form-control form-control-sm" placeholder="Optional submission note / link...">
+                    </div>
+                    <button type="submit" class="btn btn-success btn-sm w-100 rounded-3 fw-semibold">
+                        <i class="fa-solid fa-check-circle me-1"></i>Mark as Completed
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center text-muted">
+            <i class="fa-solid fa-circle-check fa-3x mb-3 text-success"></i>
+            <h5>All caught up!</h5>
+            <p class="small">You have no pending reminders. Great job staying on top of your schedule!</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

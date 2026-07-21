@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Task History - Student Smart Reminder System{% endblock %}
+{% block header_title %}Student Task Completion History{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">My Task History</h5>
+        <p class="text-muted small mb-0">Record of completed assignments, lab reports, and past reminders</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Class</th>
+                        <th>Task Title</th>
+                        <th>Instructor</th>
+                        <th>Deadline</th>
+                        <th>Status</th>
+                        <th>Completion Date</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for status in all_statuses %}
+                    {% set task = status.task %}
+                    <tr>
+                        <td class="ps-4">
+                            <span class="badge bg-indigo text-white" style="background: #6366f1;">{{ task.class_assigned.class_code }}</span>
+                        </td>
+                        <td class="fw-semibold">
+                            {{ task.title }}
+                            <div class="text-muted small text-truncate" style="max-width: 250px;">{{ task.description }}</div>
+                        </td>
+                        <td class="small">{{ task.faculty.user.full_name }}</td>
+                        <td class="small text-muted">{{ task.deadline.strftime('%b %d, %Y') }}</td>
+                        <td>
+                            {% if status.status == 'Completed' %}
+                            <span class="badge bg-success text-white px-2.5 py-1">Completed</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark px-2.5 py-1">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td class="small text-muted">
+                            {{ status.completed_at.strftime('%b %d, %Y %I:%M %p') if status.completed_at else '—' }}
+                        </td>
+                        <td class="text-end pe-4">
+                            <form action="{{ url_for('student.toggle_task_status', status_id=status.id) }}" method="POST" class="d-inline">
+                                {% if status.status == 'Completed' %}
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                    Mark Pending
+                                </button>
+                                {% else %}
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    Mark Completed
+                                </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="text-center py-4 text-muted">No task history found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

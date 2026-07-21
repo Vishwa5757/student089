@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - Student Smart Reminder System{% endblock %}
+{% block header_title %}System Administration Overview{% endblock %}
+
+{% block content %}
+<!-- Metric Cards Row -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card primary">
+            <div class="h6 text-white-50 text-uppercase fw-semibold">Total Students</div>
+            <div class="display-5 fw-bold mb-0">{{ total_students }}</div>
+            <div class="small mt-2"><i class="fa-solid fa-users me-1"></i> Enrolled in classes</div>
+            <i class="fa-solid fa-user-graduate icon-bg"></i>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card secondary">
+            <div class="h6 text-white-50 text-uppercase fw-semibold">Faculty Members</div>
+            <div class="display-5 fw-bold mb-0">{{ total_faculty }}</div>
+            <div class="small mt-2"><i class="fa-solid fa-chalkboard-user me-1"></i> Active instructors</div>
+            <i class="fa-solid fa-chalkboard-user icon-bg"></i>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card success">
+            <div class="h6 text-white-50 text-uppercase fw-semibold">Departments</div>
+            <div class="display-5 fw-bold mb-0">{{ total_departments }}</div>
+            <div class="small mt-2"><i class="fa-solid fa-building-columns me-1"></i> {{ total_classes }} Classes active</div>
+            <i class="fa-solid fa-building-columns icon-bg"></i>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card warning">
+            <div class="h6 text-white-50 text-uppercase fw-semibold">Total Reminders</div>
+            <div class="display-5 fw-bold mb-0">{{ total_tasks }}</div>
+            <div class="small mt-2"><i class="fa-solid fa-bell me-1"></i> System-wide tasks</div>
+            <i class="fa-solid fa-bell icon-bg"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions Banner -->
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+    <h5 class="fw-bold mb-3"><i class="fa-solid fa-bolt text-warning me-2"></i>Quick Administrative Actions</h5>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('admin.manage_students') }}" class="btn btn-primary rounded-3">
+            <i class="fa-solid fa-user-plus me-2"></i>Manage / Add Students
+        </a>
+        <a href="{{ url_for('admin.manage_faculty') }}" class="btn btn-indigo text-white rounded-3" style="background: #6366f1;">
+            <i class="fa-solid fa-user-tie me-2"></i>Manage / Add Faculty
+        </a>
+        <a href="{{ url_for('admin.manage_departments') }}" class="btn btn-dark rounded-3">
+            <i class="fa-solid fa-folder-plus me-2"></i>Departments & Classes
+        </a>
+    </div>
+</div>
+
+<!-- Activity Tables Row -->
+<div class="row g-4">
+    <!-- Recent Students -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-user-graduate me-2 text-primary"></i>Recently Registered Students</h6>
+                <a href="{{ url_for('admin.manage_students') }}" class="btn btn-sm btn-light">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-3">Student Name</th>
+                                <th>Roll Number</th>
+                                <th>Class</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in recent_students %}
+                            <tr>
+                                <td class="ps-3 fw-semibold">
+                                    {{ student.user.full_name }}
+                                    <div class="text-muted small">{{ student.user.email }}</div>
+                                </td>
+                                <td><span class="badge bg-light text-dark border">{{ student.roll_number }}</span></td>
+                                <td>{{ student.class_assigned.class_code if student.class_assigned else 'N/A' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="text-center text-muted py-3">No students registered yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Faculty -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-chalkboard-user me-2 text-indigo"></i>Faculty Directory</h6>
+                <a href="{{ url_for('admin.manage_faculty') }}" class="btn btn-sm btn-light">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-3">Faculty Name</th>
+                                <th>Designation</th>
+                                <th>Department</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for faculty in recent_faculty %}
+                            <tr>
+                                <td class="ps-3 fw-semibold">
+                                    {{ faculty.user.full_name }}
+                                    <div class="text-muted small">{{ faculty.user.email }}</div>
+                                </td>
+                                <td>{{ faculty.designation }}</td>
+                                <td><span class="badge bg-secondary">{{ faculty.department.dept_code if faculty.department else 'N/A' }}</span></td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="text-center text-muted py-3">No faculty registered yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

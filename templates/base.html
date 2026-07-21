@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Student Smart Reminder System{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="d-flex">
+        <!-- Sidebar Navigation -->
+        {% if session.get('user_id') %}
+        <nav class="sidebar flex-shrink-0 d-flex flex-column">
+            <div class="brand">
+                <i class="fa-solid fa-bell me-2"></i>Smart Reminder
+            </div>
+            
+            <ul class="nav nav-pills flex-column mb-auto py-3">
+                {% if session.get('user_role') == 'admin' %}
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                        <i class="fa-solid fa-chart-pie me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.manage_students') }}" class="nav-link {% if request.endpoint == 'admin.manage_students' %}active{% endif %}">
+                        <i class="fa-solid fa-user-graduate me-2"></i>Students
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.manage_faculty') }}" class="nav-link {% if request.endpoint == 'admin.manage_faculty' %}active{% endif %}">
+                        <i class="fa-solid fa-chalkboard-user me-2"></i>Faculty
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.manage_departments') }}" class="nav-link {% if request.endpoint == 'admin.manage_departments' %}active{% endif %}">
+                        <i class="fa-solid fa-building-columns me-2"></i>Departments & Classes
+                    </a>
+                </li>
+
+                {% elif session.get('user_role') == 'faculty' %}
+                <li class="nav-item">
+                    <a href="{{ url_for('faculty.dashboard') }}" class="nav-link {% if request.endpoint == 'faculty.dashboard' %}active{% endif %}">
+                        <i class="fa-solid fa-list-check me-2"></i>Task Manager
+                    </a>
+                </li>
+
+                {% elif session.get('user_role') == 'student' %}
+                <li class="nav-item">
+                    <a href="{{ url_for('student.dashboard') }}" class="nav-link {% if request.endpoint == 'student.dashboard' %}active{% endif %}">
+                        <i class="fa-solid fa-clock-rotate-left me-2"></i>My Reminders
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('student.history') }}" class="nav-link {% if request.endpoint == 'student.history' %}active{% endif %}">
+                        <i class="fa-solid fa-check-double me-2"></i>Task History
+                    </a>
+                </li>
+                {% endif %}
+
+                <li class="nav-item mt-3 pt-3 border-top border-secondary border-opacity-25">
+                    <a href="{{ url_for('auth.profile') }}" class="nav-link {% if request.endpoint == 'auth.profile' %}active{% endif %}">
+                        <i class="fa-solid fa-user-gear me-2"></i>My Profile
+                    </a>
+                </li>
+            </ul>
+
+            <div class="p-3 border-top border-secondary border-opacity-25">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="avatar-circle bg-indigo text-white rounded-circle p-2 me-2 text-center" style="width: 38px; height: 38px; background: #6366f1;">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                        <div class="fw-semibold text-truncate small text-white">{{ session.get('user_name') }}</div>
+                        <div class="text-uppercase badge bg-secondary" style="font-size: 0.65rem;">{{ session.get('user_role') }}</div>
+                    </div>
+                </div>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm w-100 mt-2">
+                    <i class="fa-solid fa-right-from-bracket me-1"></i> Log Out
+                </a>
+            </div>
+        </nav>
+        {% endif %}
+
+        <!-- Main Content Area -->
+        <main class="flex-grow-1 p-4 overflow-y-auto" style="max-height: 100vh;">
+            <!-- Top Navbar for Profile/Actions -->
+            {% if session.get('user_id') %}
+            <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 shadow-sm">
+                <div class="h5 mb-0 text-slate-800 font-weight-bold">
+                    {% block header_title %}Welcome to Student Smart Reminder System{% endblock %}
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-muted small"><i class="fa-regular fa-calendar me-1"></i> Today: {{ now.strftime('%b %d, %Y') if now else '' }}</span>
+                    <a href="{{ url_for('auth.profile') }}" class="btn btn-light rounded-circle shadow-sm position-relative">
+                        <i class="fa-solid fa-user-circle text-primary"></i>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Flash Notifications -->
+            <div class="container-fluid px-0">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+                                <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'danger' %}fa-circle-exclamation{% else %}fa-circle-info{% endif %} me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
