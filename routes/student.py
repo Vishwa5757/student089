@@ -97,11 +97,17 @@ def clear_notifications():
 @student_bp.route('/api/notifications/unread')
 @role_required('student')
 def get_unread_notifications():
-    notifications = Notification.query.filter_by(user_id=session['user_id'], is_read=False).all()
+    notifications = Notification.query.filter_by(user_id=session['user_id'], is_read=False).order_by(Notification.created_at.desc()).all()
     return {
         'notifications': [
-            {'id': n.id, 'message': n.message, 'created_at': n.created_at.strftime('%b %d, %I:%M %p')}
+            {
+                'id': n.id,
+                'message': n.message,
+                'type': n.notification_type or 'reminder',
+                'created_at': n.created_at.strftime('%b %d, %I:%M %p')
+            }
             for n in notifications
         ]
     }
+
 

@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             const toastMsg = document.getElementById('toastMessage');
                             const toastTime = document.getElementById('toastTimeAgo');
 
-                            if (latestNewNotif.message.includes('New task assigned')) {
+                            if (latestNewNotif.type === 'assignment' || (latestNewNotif.message && latestNewNotif.message.includes('New task assigned'))) {
                                 if (toastTitle) toastTitle.textContent = '🔔 NEW TASK ASSIGNED';
                             } else {
                                 if (toastTitle) toastTitle.textContent = '🔔 TASK REMINDER';
@@ -126,9 +126,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         checkNotifications();
-        setInterval(checkNotifications, 10000); // Check every 10 seconds
+        setInterval(checkNotifications, 30000); // Check every 30 seconds
     }
 });
+
 
 function confirmDelete(message) {
     return confirm(message || 'Are you sure you want to delete this item? This action cannot be undone.');

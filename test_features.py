@@ -89,15 +89,15 @@ def run_tests():
         print(f"[PASS] Scheduler result for tomorrow's deadline: {reminders_sent} sent (Expected: 0).")
         assert reminders_sent == 0, "No reminders should be sent before final submission day!"
 
-        # --- TEST 3: DEADLINE TODAY (REMINDER SYSTEM BECOMES ACTIVE) ---
-        print("\n--- [TEST 3] Deadline Today (Reminder System Active) ---")
-        task1.deadline = now + timedelta(hours=2) # 2 hours from now today
+        # --- TEST 3: DEADLINE ARRIVED / PASSED (REMINDER SYSTEM BECOMES ACTIVE) ---
+        print("\n--- [TEST 3] Deadline Arrived/Passed (Reminder System Active) ---")
+        task1.deadline = now - timedelta(minutes=5) # 5 minutes ago (due date arrived/passed)
         db.session.commit()
-        print(f"Updated deadline to today at {task1.deadline.strftime('%I:%M %p')}.")
+        print(f"Updated deadline to past/current due date: {task1.deadline.strftime('%d %b %Y, %I:%M %p')}.")
 
         r_sent_1 = scan_and_remind()
-        print(f"[PASS] Scheduler result on submission day: {r_sent_1} sent (Expected: 1).")
-        assert r_sent_1 == 1, "Should send 1 reminder when active on submission day!"
+        print(f"[PASS] Scheduler result on due date: {r_sent_1} sent (Expected: 1).")
+        assert r_sent_1 == 1, "Should send 1 reminder when active on/after due date!"
 
         # --- TEST 4: LEAVE TASK PENDING & CHECK 10-MINUTE INTERVAL ---
         print("\n--- [TEST 4] 10-Minute Reminder Interval Logic ---")
@@ -127,15 +127,15 @@ def run_tests():
         print(f"[PASS] Scheduler result after task completion: {r_sent_after_complete} sent (Expected: 0).")
         assert r_sent_after_complete == 0, "Completed task should NOT trigger reminders!"
 
-        # --- TEST 7: LEAVE TASK PENDING UNTIL DEADLINE PASSED ---
-        print("\n--- [TEST 7] Deadline Passed (No Reminders After Deadline) ---")
+        # --- TEST 7: PAST DUE PENDING TASK (REPEATING UNTIL COMPLETED) ---
+        print("\n--- [TEST 7] Past Due Pending Task (Repeats Reminders Until Marked Complete) ---")
         # Create task with past deadline
         task2 = Task(
             title="Expired Python Task",
             description="Past deadline task.",
             faculty_id=faculty.id,
             class_id=student1.class_id,
-            deadline=now - timedelta(minutes=10), # 10 mins ago today
+            deadline=now - timedelta(minutes=30), # 30 mins ago
             priority="Low"
         )
         db.session.add(task2)
@@ -146,18 +146,25 @@ def run_tests():
         db.session.commit()
 
         r_sent_expired = scan_and_remind()
-        print(f"[PASS] Scheduler result for past deadline task: {r_sent_expired} sent (Expected: 0).")
-        assert r_sent_expired == 0, "Expired tasks should NOT trigger reminders!"
+        print(f"[PASS] Scheduler result for pending past-due task: {r_sent_expired} sent (Expected: 1).")
+        assert r_sent_expired == 1, "Pending past-due task MUST trigger reminder!"
+
+        # Mark task2 complete and verify reminders stop permanently
+        status2.status = 'Completed'
+        db.session.commit()
+        r_sent_after_complete2 = scan_and_remind()
+        print(f"[PASS] Scheduler result after task 2 completed: {r_sent_after_complete2} sent (Expected: 0).")
+        assert r_sent_after_complete2 == 0, "Completed task 2 should stop reminders permanently!"
 
         # --- TEST 8: RESTART SCHEDULER (PERSISTENT DUPLICATE PREVENTION) ---
         print("\n--- [TEST 8] Scheduler Restart (Persistent State Verification) ---")
-        # Create active task due in 30 mins
+        # Create active task due 10 mins ago
         task3 = Task(
             title="Post-Restart Task",
             description="Testing state persistence across restarts.",
             faculty_id=faculty.id,
             class_id=student1.class_id,
-            deadline=now + timedelta(minutes=30),
+            deadline=now - timedelta(minutes=10),
             priority="Medium"
         )
         db.session.add(task3)
@@ -169,6 +176,7 @@ def run_tests():
 
         r1 = scan_and_remind() # First send
         print(f"First scan sent: {r1} reminder.")
+        assert r1 == 1, "First scan for past due pending task 3 should send 1 reminder!"
 
         # Simulate new process / restart app instance
         new_app = create_app()

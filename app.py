@@ -19,6 +19,26 @@ def create_app(config_class=Config):
     app.register_blueprint(faculty_bp)
     app.register_blueprint(student_bp)
 
+    # Initialize background scheduler for task reminders
+    if not app.config.get('TESTING') and not os.environ.get('DISABLE_SCHEDULER'):
+        if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+            try:
+                from apscheduler.schedulers.background import BackgroundScheduler
+                from remind_scheduler import scan_and_remind
+
+                interval_minutes = int(os.environ.get('REMINDER_INTERVAL_MINUTES', 10))
+                scheduler = BackgroundScheduler(daemon=True)
+                scheduler.add_job(
+                    func=lambda: scan_and_remind(app),
+                    trigger='interval',
+                    minutes=interval_minutes,
+                    id='task_reminder_job',
+                    replace_existing=True
+                )
+                scheduler.start()
+            except Exception as e:
+                print(f"Background scheduler initialization notice: {e}")
+
     @app.route('/')
     def index():
         if 'user_id' in session:

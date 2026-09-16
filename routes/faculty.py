@@ -78,7 +78,12 @@ def create_task():
         assigned_students = Student.query.filter_by(class_id=class_id).all()
 
     for student in assigned_students:
-        status_record = TaskStatus(task_id=task.id, student_id=student.id, status='Pending')
+        status_record = TaskStatus(
+            task_id=task.id,
+            student_id=student.id,
+            status='Pending',
+            assignment_notified=True
+        )
         db.session.add(status_record)
 
         # Stage 1: Notify student ONCE upon task creation (In-App + Email)
@@ -87,7 +92,7 @@ def create_task():
         notif = Notification(
             user_id=student.user_id,
             task_id=task.id,
-            notification_type='TASK_ASSIGNED',
+            notification_type='assignment',
             message=notif_msg
         )
         db.session.add(notif)

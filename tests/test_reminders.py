@@ -51,8 +51,8 @@ def app():
 def client(app):
     return app.test_client()
 
-def test_stage_1_initial_task_notification(app, client):
-    """TEST 1: Normal task assignment creates ONE initial notification."""
+def test_initial_assignment_notification(app, client):
+    """TEST 1: Task creation triggers immediate assignment notification (email + popup)."""
     client.post('/auth/login', data={'email': 'faculty@test.com', 'password': 'fac123'})
     
     now = datetime.now()
@@ -71,12 +71,13 @@ def test_stage_1_initial_task_notification(app, client):
         assert res.status_code == 200
 
         stu_user = User.query.filter_by(email="student@test.com").first()
-        notifs = Notification.query.filter_by(user_id=stu_user.id, notification_type='TASK_ASSIGNED').all()
+        notifs = Notification.query.filter_by(user_id=stu_user.id).all()
         assert len(notifs) == 1
+        assert notifs[0].notification_type in ['assignment', 'TASK_ASSIGNED']
         assert "New task assigned: Test Assignment 1" in notifs[0].message
 
-def test_before_final_day_no_reminders(app):
-    """TEST 2: Task deadline several days away should NOT receive final-hour reminders."""
+def test_before_due_date_no_reminders(app):
+    """TEST 2: Task due date in the future should NOT receive reminders yet."""
     with app.app_context():
         fac = Faculty.query.first()
         cls = Class.query.first()
@@ -87,7 +88,7 @@ def test_before_final_day_no_reminders(app):
             title="Future Task",
             faculty_id=fac.id,
             class_id=cls.id,
-            deadline=now + timedelta(days=3),
+            deadline=now + timedelta(days=2),
             priority="Low"
         )
         db.session.add(task)
@@ -100,20 +101,20 @@ def test_before_final_day_no_reminders(app):
     reminders_sent = scan_and_remind(app_instance=app)
     assert reminders_sent == 0
 
-def test_final_day_6_stage_reminders_and_duplicate_prevention(app):
-    """TEST 4 & TEST 5: Final-day 1-hour reminders and duplicate prevention."""
+def test_due_date_passed_sends_repeating_reminders_and_prevents_duplicate_within_interval(app):
+    """TEST 3: Task past due date sends reminder every 10 min, prevents duplicate if called immediately."""
     with app.app_context():
         fac = Faculty.query.first()
         cls = Class.query.first()
         stu = Student.query.first()
 
         now = datetime.now()
-        # Set deadline to 25 minutes from now (Today, final hour -> REMINDER_30 stage)
+        # Set deadline to 15 minutes ago
         task = Task(
-            title="Urgent Assignment",
+            title="Past Due Assignment",
             faculty_id=fac.id,
             class_id=cls.id,
-            deadline=now + timedelta(minutes=25),
+            deadline=now - timedelta(minutes=15),
             priority="Urgent"
         )
         db.session.add(task)
@@ -123,21 +124,25 @@ def test_final_day_6_stage_reminders_and_duplicate_prevention(app):
         db.session.add(status)
         db.session.commit()
 
-        # Run 1: Should send 1 reminder (REMINDER_30)
+        # Run 1: Due date passed & status Pending -> 1 reminder sent
         r1 = scan_and_remind(app_instance=app)
         assert r1 == 1
 
-        # Run 2 immediately: DUPLICATE PREVENTION -> 0 sent!
+        # Run 2 immediately: Interval not elapsed -> 0 sent
         r2 = scan_and_remind(app_instance=app)
         assert r2 == 0
 
-        # Verify notification type in DB
-        notif = Notification.query.filter_by(user_id=stu.user_id, task_id=task.id, notification_type='REMINDER_30').first()
+        # Verify notification created in DB
+        notif = Notification.query.filter_by(user_id=stu.user_id, task_id=task.id, notification_type='reminder').first()
         assert notif is not None
-        assert "30 minutes remain" in notif.message
+        assert "Task Reminder: Past Due Assignment is still pending" in notif.message
 
-def test_task_completion_stops_reminders(app, client):
-    """TEST 6: Marking task completed immediately stops future reminders."""
+        # Check reminder_count on status
+        updated_status = db.session.get(TaskStatus, status.id)
+        assert updated_status.reminder_count == 1
+
+def test_task_completion_stops_reminders_permanently(app, client):
+    """TEST 4: Student marking task complete stops reminders permanently."""
     with app.app_context():
         fac = Faculty.query.first()
         cls = Class.query.first()
@@ -148,7 +153,7 @@ def test_task_completion_stops_reminders(app, client):
             title="Lab Project",
             faculty_id=fac.id,
             class_id=cls.id,
-            deadline=now + timedelta(minutes=15),
+            deadline=now - timedelta(minutes=30),
             priority="High"
         )
         db.session.add(task)
@@ -159,44 +164,21 @@ def test_task_completion_stops_reminders(app, client):
         db.session.commit()
         status_id = status.id
 
-    # 1. Run scheduler while Pending -> REMINDER_20 sent
+    # 1. Run scheduler while Pending -> 1 reminder sent
     r1 = scan_and_remind(app_instance=app)
     assert r1 == 1
 
     # 2. Student completes task
     client.post('/auth/login', data={'email': 'student@test.com', 'password': 'stu123'})
-    client.post(f'/student/tasks/{status_id}/toggle', data={'remarks': 'Finished early'}, follow_redirects=True)
+    client.post(f'/student/tasks/{status_id}/toggle', data={'remarks': 'Done'}, follow_redirects=True)
 
     # 3. Verify status is Completed
     with app.app_context():
         updated_status = db.session.get(TaskStatus, status_id)
         assert updated_status.status == "Completed"
+        assert updated_status.is_completed is True
+        assert updated_status.completed_at is not None
 
-    # 4. Re-run scheduler -> 0 sent!
+    # 4. Re-run scheduler -> 0 sent permanently!
     r2 = scan_and_remind(app_instance=app)
     assert r2 == 0
-
-def test_deadline_passed_no_reminders(app):
-    """TEST 7: Expired tasks after deadline generate no reminders."""
-    with app.app_context():
-        fac = Faculty.query.first()
-        cls = Class.query.first()
-        stu = Student.query.first()
-
-        now = datetime.now()
-        task = Task(
-            title="Past Due Task",
-            faculty_id=fac.id,
-            class_id=cls.id,
-            deadline=now - timedelta(minutes=10),
-            priority="High"
-        )
-        db.session.add(task)
-        db.session.flush()
-
-        status = TaskStatus(task_id=task.id, student_id=stu.id, status="Pending")
-        db.session.add(status)
-        db.session.commit()
-
-    reminders_sent = scan_and_remind(app_instance=app)
-    assert reminders_sent == 0
