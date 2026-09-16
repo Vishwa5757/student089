@@ -58,15 +58,16 @@ def send_task_reminder_email(to_email, student_name, task_title, deadline_str):
     """
     Sends a reminder email to the student on the final submission day if task is pending.
     """
-    subject = "Reminder - Task Still Pending"
+    subject = f"Reminder - {task_title} Still Pending"
     body = (
         f"Hello {student_name},\n\n"
         f"This is a reminder that your task is still pending.\n\n"
         f"Task:\n{task_title}\n\n"
         f"Last Date of Submission:\n{deadline_str}\n\n"
-        f"Please complete the task before the submission deadline.\n\n"
-        f"You are receiving this reminder because the task has not yet been completed.\n\n"
+        f"Please complete the task before the deadline.\n\n"
+        f"This reminder will stop automatically when you complete the task.\n\n"
         f"Smart Student Reminder System"
     )
     return _send_email(to_email, subject, body)
+
 
