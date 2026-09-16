@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Faculty - Admin{% endblock %}
+{% block header_title %}Faculty Management Directory{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h5 class="fw-bold mb-1 text-white">Faculty List</h5>
+        <p class="text-slate-400 small mb-0">Manage professors, instructors, and department assignments</p>
+    </div>
+    <button class="btn btn-glass-primary" data-bs-toggle="modal" data-bs-target="#addFacultyModal">
+        <i class="fa-solid fa-user-plus me-2"></i>Add Faculty Member
+    </button>
+</div>
+
+<!-- Search Bar -->
+<div class="glass-panel p-3 mb-4">
+    <div class="row g-2">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input type="text" id="tableSearchInput" class="form-control" placeholder="Search by faculty name, email, or designation...">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Faculty Glass Table -->
+<div class="glass-panel overflow-hidden">
+    <div class="table-responsive">
+        <table class="table glass-table align-middle mb-0 searchable-table">
+            <thead>
+                <tr>
+                    <th class="ps-4">Faculty Name</th>
+                    <th>Email</th>
+                    <th>Designation</th>
+                    <th>Department</th>
+                    <th>Active Tasks Created</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for faculty in faculty_list %}
+                <tr>
+                    <td class="ps-4 fw-semibold text-white">{{ faculty.user.full_name }}</td>
+                    <td class="text-slate-400">{{ faculty.user.email }}</td>
+                    <td>{{ faculty.designation }}</td>
+                    <td><span class="badge px-2 py-1 text-white" style="background: rgba(6, 182, 212, 0.3); border: 1px solid rgba(6, 182, 212, 0.4);">{{ faculty.department.dept_code if faculty.department else 'N/A' }}</span></td>
+                    <td><span class="badge px-2 py-1 text-white" style="background: rgba(99, 102, 241, 0.3); border: 1px solid rgba(99, 102, 241, 0.4);">{{ faculty.tasks|length }}</span></td>
+                    <td class="text-end pe-4">
+                        <form action="{{ url_for('admin.manage_faculty') }}" method="POST" class="d-inline" onsubmit="return confirmDelete('Are you sure you want to delete {{ faculty.user.full_name }}?');">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="faculty_id" value="{{ faculty.id }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="fa-solid fa-trash-can me-1"></i>Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center py-4 text-slate-400">No faculty members found. Click "Add Faculty Member" to register one.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Faculty Modal -->
+<div class="modal fade" id="addFacultyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-modal">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold text-white"><i class="fa-solid fa-user-tie text-indigo me-2"></i>Register New Faculty Member</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('admin.manage_faculty') }}" method="POST">
+                <input type="hidden" name="action" value="add">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="full_name" class="form-control" placeholder="Dr. Robert Vance" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" name="email" class="form-control" placeholder="faculty@univ.edu" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Designation</label>
+                            <input type="text" name="designation" class="form-control" placeholder="e.g. Associate Professor" value="Professor">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" placeholder="Default: faculty123">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Department</label>
+                        <select name="department_id" class="form-select" required>
+                            <option value="" disabled selected>Select Department</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}">{{ dept.dept_code }} - {{ dept.dept_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-glass-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-glass-primary px-4">Create Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
