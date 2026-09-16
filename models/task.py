@@ -29,6 +29,7 @@ class TaskStatus(db.Model):
     status = db.Column(db.String(20), default='Pending')  # 'Pending', 'Completed'
     completed_at = db.Column(db.DateTime, nullable=True)
     student_remarks = db.Column(db.Text, nullable=True)
+    last_reminder_sent_at = db.Column(db.DateTime, nullable=True)
 
     def __repr__(self):
         return f'<TaskStatus Task:{self.task_id} Student:{self.student_id} Status:{self.status}>'
@@ -39,9 +40,11 @@ class Notification(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'), nullable=True)
+    notification_type = db.Column(db.String(50), nullable=True)  # 'TASK_ASSIGNED', 'REMINDER_60', 'REMINDER_50', etc.
     message = db.Column(db.Text, nullable=False)
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def __repr__(self):
-        return f'<Notification User:{self.user_id} Read:{self.is_read}>'
+        return f'<Notification User:{self.user_id} Type:{self.notification_type} Read:{self.is_read}>'

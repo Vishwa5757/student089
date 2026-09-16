@@ -14,7 +14,8 @@ def get_current_student():
 def dashboard():
     student = get_current_student()
     if not student:
-        flash('Student profile not found.', 'danger')
+        session.clear()
+        flash('Student profile not found. Please log in again.', 'danger')
         return redirect(url_for('auth.login'))
 
     # Fetch all tasks assigned to student
@@ -91,3 +92,16 @@ def clear_notifications():
     db.session.commit()
     flash('Notifications marked as read.', 'info')
     return redirect(url_for('student.dashboard'))
+
+
+@student_bp.route('/api/notifications/unread')
+@role_required('student')
+def get_unread_notifications():
+    notifications = Notification.query.filter_by(user_id=session['user_id'], is_read=False).all()
+    return {
+        'notifications': [
+            {'id': n.id, 'message': n.message, 'created_at': n.created_at.strftime('%b %d, %I:%M %p')}
+            for n in notifications
+        ]
+    }
+

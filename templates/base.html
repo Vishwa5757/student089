@@ -10,80 +10,88 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- Google Fonts Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Custom CSS -->
+    <!-- Custom Dark Glassmorphism CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <div class="d-flex">
+    <div class="d-flex min-vh-100">
+        <!-- Sidebar Mobile Backdrop Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
         <!-- Sidebar Navigation -->
         {% if session.get('user_id') %}
-        <nav class="sidebar flex-shrink-0 d-flex flex-column">
-            <div class="brand">
-                <i class="fa-solid fa-bell me-2"></i>Smart Reminder
+        <nav class="sidebar flex-shrink-0 d-flex flex-column" id="mainSidebar">
+            <div class="brand d-flex align-items-center justify-content-between">
+                <div>
+                    <i class="fa-solid fa-bell-concierge me-2 text-indigo"></i>Smart Reminder
+                </div>
+                <button class="btn btn-sm btn-link text-white-50 d-lg-none p-0" id="sidebarCloseBtn">
+                    <i class="fa-solid fa-xmark fa-lg"></i>
+                </button>
             </div>
             
             <ul class="nav nav-pills flex-column mb-auto py-3">
                 {% if session.get('user_role') == 'admin' %}
                 <li class="nav-item">
                     <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
-                        <i class="fa-solid fa-chart-pie me-2"></i>Dashboard
+                        <i class="fa-solid fa-chart-pie"></i>Dashboard
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="{{ url_for('admin.manage_students') }}" class="nav-link {% if request.endpoint == 'admin.manage_students' %}active{% endif %}">
-                        <i class="fa-solid fa-user-graduate me-2"></i>Students
+                        <i class="fa-solid fa-user-graduate"></i>Students
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="{{ url_for('admin.manage_faculty') }}" class="nav-link {% if request.endpoint == 'admin.manage_faculty' %}active{% endif %}">
-                        <i class="fa-solid fa-chalkboard-user me-2"></i>Faculty
+                        <i class="fa-solid fa-chalkboard-user"></i>Faculty
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="{{ url_for('admin.manage_departments') }}" class="nav-link {% if request.endpoint == 'admin.manage_departments' %}active{% endif %}">
-                        <i class="fa-solid fa-building-columns me-2"></i>Departments & Classes
+                        <i class="fa-solid fa-building-columns"></i>Departments & Classes
                     </a>
                 </li>
 
                 {% elif session.get('user_role') == 'faculty' %}
                 <li class="nav-item">
                     <a href="{{ url_for('faculty.dashboard') }}" class="nav-link {% if request.endpoint == 'faculty.dashboard' %}active{% endif %}">
-                        <i class="fa-solid fa-list-check me-2"></i>Task Manager
+                        <i class="fa-solid fa-list-check"></i>Task Manager
                     </a>
                 </li>
 
                 {% elif session.get('user_role') == 'student' %}
                 <li class="nav-item">
                     <a href="{{ url_for('student.dashboard') }}" class="nav-link {% if request.endpoint == 'student.dashboard' %}active{% endif %}">
-                        <i class="fa-solid fa-clock-rotate-left me-2"></i>My Reminders
+                        <i class="fa-solid fa-clock-rotate-left"></i>My Reminders
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="{{ url_for('student.history') }}" class="nav-link {% if request.endpoint == 'student.history' %}active{% endif %}">
-                        <i class="fa-solid fa-check-double me-2"></i>Task History
+                        <i class="fa-solid fa-check-double"></i>Task History
                     </a>
                 </li>
                 {% endif %}
 
-                <li class="nav-item mt-3 pt-3 border-top border-secondary border-opacity-25">
+                <li class="nav-item mt-3 pt-3 border-top border-white border-opacity-10">
                     <a href="{{ url_for('auth.profile') }}" class="nav-link {% if request.endpoint == 'auth.profile' %}active{% endif %}">
-                        <i class="fa-solid fa-user-gear me-2"></i>My Profile
+                        <i class="fa-solid fa-user-gear"></i>My Profile
                     </a>
                 </li>
             </ul>
 
-            <div class="p-3 border-top border-secondary border-opacity-25">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="avatar-circle bg-indigo text-white rounded-circle p-2 me-2 text-center" style="width: 38px; height: 38px; background: #6366f1;">
+            <div class="p-3 border-top border-white border-opacity-10">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar-circle rounded-circle text-white d-flex align-items-center justify-content-center me-2 text-center" style="width: 40px; height: 40px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
                         <i class="fa-solid fa-user"></i>
                     </div>
                     <div class="overflow-hidden">
                         <div class="fw-semibold text-truncate small text-white">{{ session.get('user_name') }}</div>
-                        <div class="text-uppercase badge bg-secondary" style="font-size: 0.65rem;">{{ session.get('user_role') }}</div>
+                        <div class="text-uppercase badge bg-indigo text-white" style="font-size: 0.65rem; background: #6366f1;">{{ session.get('user_role') }}</div>
                     </div>
                 </div>
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm w-100 mt-2">
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm w-100 rounded-3">
                     <i class="fa-solid fa-right-from-bracket me-1"></i> Log Out
                 </a>
             </div>
@@ -91,31 +99,72 @@
         {% endif %}
 
         <!-- Main Content Area -->
-        <main class="flex-grow-1 p-4 overflow-y-auto" style="max-height: 100vh;">
-            <!-- Top Navbar for Profile/Actions -->
+        <main class="flex-grow-1 p-3 p-md-4 overflow-y-auto" style="max-height: 100vh;">
+            <!-- Top Navbar for Notifications / Profile / Actions -->
             {% if session.get('user_id') %}
-            <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 shadow-sm">
-                <div class="h5 mb-0 text-slate-800 font-weight-bold">
-                    {% block header_title %}Welcome to Student Smart Reminder System{% endblock %}
-                </div>
+            <div class="top-navbar d-flex justify-content-between align-items-center mb-4">
                 <div class="d-flex align-items-center gap-3">
-                    <span class="text-muted small"><i class="fa-regular fa-calendar me-1"></i> Today: {{ now.strftime('%b %d, %Y') if now else '' }}</span>
-                    <a href="{{ url_for('auth.profile') }}" class="btn btn-light rounded-circle shadow-sm position-relative">
-                        <i class="fa-solid fa-user-circle text-primary"></i>
+                    <button class="btn btn-sm btn-outline-light d-lg-none rounded-3" id="sidebarToggleBtn">
+                        <i class="fa-solid fa-bars fa-lg"></i>
+                    </button>
+                    <div class="h5 mb-0 text-white font-weight-bold">
+                        {% block header_title %}Smart Reminder Dashboard{% endblock %}
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-slate-400 small d-none d-md-inline">
+                        <i class="fa-regular fa-calendar me-1 text-indigo"></i> Today: {{ now.strftime('%b %d, %Y') if now else '' }}
+                    </span>
+
+                    <!-- Notification Bell Dropdown -->
+                    {% if session.get('user_role') == 'student' %}
+                    <div class="dropdown">
+                        <button class="notif-bell-btn" type="button" id="notifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="notif-badge" id="notification-bell-badge" style="{% if not notifications or notifications|length == 0 %}display: none;{% endif %}">
+                                {{ notifications|length if notifications else 0 }}
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end notif-dropdown-menu" aria-labelledby="notifDropdownBtn">
+                            <li class="p-2 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center">
+                                <span class="fw-bold small text-white"><i class="fa-solid fa-bell text-indigo me-1"></i> Notifications</span>
+                                <form action="{{ url_for('student.clear_notifications') }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-link btn-sm text-indigo p-0 text-decoration-none" style="font-size: 0.75rem;">Clear All</button>
+                                </form>
+                            </li>
+                            <div id="dropdown-notif-list">
+                                {% if notifications and notifications|length > 0 %}
+                                    {% for notif in notifications %}
+                                    <li class="notif-item">
+                                        <div class="small text-white font-weight-medium">{{ notif.message }}</div>
+                                        <div class="text-slate-400" style="font-size: 0.7rem;">{{ notif.created_at.strftime('%b %d, %I:%M %p') }}</div>
+                                    </li>
+                                    {% endfor %}
+                                {% else %}
+                                    <li class="p-3 text-center text-slate-400 small" id="no-notif-msg">No unread notifications</li>
+                                {% endif %}
+                            </div>
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-light rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="fa-solid fa-user-gear"></i>
                     </a>
                 </div>
             </div>
             {% endif %}
 
-            <!-- Flash Notifications -->
+            <!-- Flash Messages -->
             <div class="container-fluid px-0">
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
-                            <div class="alert alert-{{ category }} alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
-                                <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'danger' %}fa-circle-exclamation{% else %}fa-circle-info{% endif %} me-2"></i>
+                            <div class="alert alert-{{ category if category != 'danger' else 'danger' }} alert-dismissible fade show glass-panel text-white border-0 py-3 px-4 mb-4" role="alert" style="background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(16px);">
+                                <i class="fa-solid {% if category == 'success' %}fa-circle-check text-emerald-400{% elif category == 'danger' %}fa-circle-exclamation text-rose-400{% else %}fa-circle-info text-sky-400{% endif %} me-2"></i>
                                 {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         {% endfor %}
                     {% endif %}

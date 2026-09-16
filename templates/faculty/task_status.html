@@ -5,74 +5,74 @@
 
 {% block content %}
 <div class="mb-4">
-    <a href="{{ url_for('faculty.dashboard') }}" class="btn btn-outline-secondary btn-sm mb-3">
+    <a href="{{ url_for('faculty.dashboard') }}" class="btn btn-glass-secondary btn-sm mb-3 px-3">
         <i class="fa-solid fa-arrow-left me-1"></i>Back to Dashboard
     </a>
-    <div class="card border-0 shadow-sm rounded-4 p-4">
-        <div class="d-flex justify-content-between align-items-start">
+    <div class="glass-card p-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
             <div>
-                <span class="badge bg-indigo text-white mb-2" style="background: #6366f1;">{{ task.class_assigned.class_code }}</span>
+                <span class="badge px-2.5 py-1 text-white mb-2" style="background: rgba(99, 102, 241, 0.3); border: 1px solid rgba(99, 102, 241, 0.5);">
+                    {{ task.class_assigned.class_code }}
+                </span>
                 <span class="badge badge-priority-{{ task.priority }} mb-2 ms-1">{{ task.priority }} Priority</span>
-                <h4 class="fw-bold mb-1">{{ task.title }}</h4>
-                <p class="text-muted mb-2">{{ task.description }}</p>
-                <div class="small text-secondary">
-                    <i class="fa-regular fa-clock me-1 text-primary"></i>Deadline: <strong>{{ task.deadline.strftime('%b %d, %Y %I:%M %p') }}</strong>
+                <h4 class="fw-bold text-white mb-1">{{ task.title }}</h4>
+                <p class="text-slate-400 mb-2">{{ task.description }}</p>
+                <div class="small text-slate-400">
+                    <i class="fa-regular fa-clock me-1 text-indigo"></i>Deadline: <strong class="text-white">{{ task.deadline.strftime('%b %d, %Y %I:%M %p') }}</strong>
                 </div>
             </div>
             <div class="text-end">
-                <div class="display-6 fw-bold text-success mb-0">{{ completed_count }} / {{ total_students }}</div>
-                <div class="small text-muted fw-semibold">Students Completed</div>
+                <div class="display-6 fw-bold text-emerald-400 mb-0" style="color: #34d399;">{{ completed_count }} / {{ total_students }}</div>
+                <div class="small text-slate-400 fw-semibold">Students Completed</div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Student Status Table -->
-<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-    <div class="card-header bg-white border-0 py-3">
-        <h6 class="fw-bold mb-0"><i class="fa-solid fa-clipboard-check text-primary me-2"></i>Class Student Status List</h6>
+<div class="glass-panel overflow-hidden">
+    <div class="p-3 border-bottom border-white border-opacity-10">
+        <h6 class="fw-bold text-white mb-0"><i class="fa-solid fa-clipboard-check text-indigo me-2"></i>Class Student Status List</h6>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light">
-                    <tr>
-                        <th class="ps-4">Roll Number</th>
-                        <th>Student Name</th>
-                        <th>Status</th>
-                        <th>Completed At</th>
-                        <th>Student Remarks</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for status in student_statuses %}
-                    <tr>
-                        <td class="ps-4"><span class="badge bg-dark">{{ status.student.roll_number }}</span></td>
-                        <td class="fw-semibold">{{ status.student.user.full_name }}</td>
-                        <td>
-                            {% if status.status == 'Completed' %}
-                            <span class="badge bg-success text-white px-3 py-1">
-                                <i class="fa-solid fa-check me-1"></i>Completed
-                            </span>
-                            {% else %}
-                            <span class="badge bg-warning text-dark px-3 py-1">
-                                <i class="fa-solid fa-hourglass me-1"></i>Pending
-                            </span>
-                            {% endif %}
-                        </td>
-                        <td class="text-muted small">
-                            {{ status.completed_at.strftime('%b %d, %Y %I:%M %p') if status.completed_at else '—' }}
-                        </td>
-                        <td class="text-slate-600 small">
-                            {{ status.student_remarks or 'No remarks provided.' }}
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr><td colspan="5" class="text-center py-4 text-muted">No students assigned to this task.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <div class="table-responsive">
+        <table class="table glass-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-4">Roll Number</th>
+                    <th>Student Name</th>
+                    <th>Status</th>
+                    <th>Completed At</th>
+                    <th>Student Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for status in student_statuses %}
+                <tr>
+                    <td class="ps-4"><span class="badge bg-dark border border-white border-opacity-10">{{ status.student.roll_number }}</span></td>
+                    <td class="fw-semibold text-white">{{ status.student.user.full_name }}</td>
+                    <td>
+                        {% if status.status == 'Completed' %}
+                        <span class="status-badge completed">
+                            <i class="fa-solid fa-check"></i>COMPLETED
+                        </span>
+                        {% else %}
+                        <span class="status-badge pending">
+                            <i class="fa-solid fa-hourglass"></i>PENDING
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="text-slate-400 small">
+                        {{ status.completed_at.strftime('%b %d, %Y %I:%M %p') if status.completed_at else '—' }}
+                    </td>
+                    <td class="text-slate-300 small">
+                        {{ status.student_remarks or 'No remarks provided.' }}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center py-4 text-slate-400">No students assigned to this task.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}

@@ -6,100 +6,98 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h5 class="fw-bold mb-1">Students List</h5>
-        <p class="text-muted small mb-0">View, register, or delete student accounts across departments</p>
+        <h5 class="fw-bold mb-1 text-white">Students List</h5>
+        <p class="text-slate-400 small mb-0">View, register, or delete student accounts across departments</p>
     </div>
-    <button class="btn btn-primary rounded-3" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+    <button class="btn btn-glass-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
         <i class="fa-solid fa-plus me-2"></i>Add New Student
     </button>
 </div>
 
-<!-- Search & Filter Bar -->
-<div class="card border-0 shadow-sm rounded-4 mb-4 p-3">
+<!-- Search Bar -->
+<div class="glass-panel p-3 mb-4">
     <div class="row g-2">
         <div class="col-md-6">
             <div class="input-group">
-                <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-                <input type="text" id="tableSearchInput" class="form-control bg-light border-start-0" placeholder="Search by student name, roll number, or email...">
+                <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input type="text" id="tableSearchInput" class="form-control" placeholder="Search by student name, roll number, or email...">
             </div>
         </div>
     </div>
 </div>
 
-<!-- Students Table -->
-<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 searchable-table">
-                <thead class="bg-light">
-                    <tr>
-                        <th class="ps-4">Roll Number</th>
-                        <th>Student Name</th>
-                        <th>Email</th>
-                        <th>Department</th>
-                        <th>Assigned Class</th>
-                        <th class="text-end pe-4">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for student in students %}
-                    <tr>
-                        <td class="ps-4"><span class="badge bg-dark">{{ student.roll_number }}</span></td>
-                        <td class="fw-semibold">{{ student.user.full_name }}</td>
-                        <td class="text-muted">{{ student.user.email }}</td>
-                        <td><span class="badge bg-info text-dark">{{ student.department.dept_code if student.department else 'N/A' }}</span></td>
-                        <td><span class="badge bg-secondary">{{ student.class_assigned.class_code if student.class_assigned else 'Unassigned' }}</span></td>
-                        <td class="text-end pe-4">
-                            <form action="{{ url_for('admin.manage_students') }}" method="POST" class="d-inline" onsubmit="return confirmDelete('Are you sure you want to delete student {{ student.user.full_name }}?');">
-                                <input type="hidden" name="action" value="delete">
-                                <input type="hidden" name="student_id" value="{{ student.id }}">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    <i class="fa-solid fa-trash-can me-1"></i>Delete
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr><td colspan="6" class="text-center py-4 text-muted">No students found. Click "Add New Student" to register one.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+<!-- Students Glass Table -->
+<div class="glass-panel overflow-hidden">
+    <div class="table-responsive">
+        <table class="table glass-table align-middle mb-0 searchable-table">
+            <thead>
+                <tr>
+                    <th class="ps-4">Roll Number</th>
+                    <th>Student Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th>Assigned Class</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td class="ps-4"><span class="badge bg-dark border border-white border-opacity-10">{{ student.roll_number }}</span></td>
+                    <td class="fw-semibold text-white">{{ student.user.full_name }}</td>
+                    <td class="text-slate-400">{{ student.user.email }}</td>
+                    <td><span class="badge px-2 py-1 text-white" style="background: rgba(6, 182, 212, 0.3); border: 1px solid rgba(6, 182, 212, 0.4);">{{ student.department.dept_code if student.department else 'N/A' }}</span></td>
+                    <td><span class="badge px-2 py-1 text-white" style="background: rgba(99, 102, 241, 0.3); border: 1px solid rgba(99, 102, 241, 0.4);">{{ student.class_assigned.class_code if student.class_assigned else 'Unassigned' }}</span></td>
+                    <td class="text-end pe-4">
+                        <form action="{{ url_for('admin.manage_students') }}" method="POST" class="d-inline" onsubmit="return confirmDelete('Are you sure you want to delete student {{ student.user.full_name }}?');">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="student_id" value="{{ student.id }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="fa-solid fa-trash-can me-1"></i>Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center py-4 text-slate-400">No students found. Click "Add New Student" to register one.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 
 <!-- Add Student Modal -->
 <div class="modal fade" id="addStudentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-plus text-primary me-2"></i>Register New Student</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content glass-modal">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold text-white"><i class="fa-solid fa-user-plus text-indigo me-2"></i>Register New Student</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="{{ url_for('admin.manage_students') }}" method="POST">
                 <input type="hidden" name="action" value="add">
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Full Name</label>
+                        <label class="form-label">Full Name</label>
                         <input type="text" name="full_name" class="form-control" placeholder="e.g. Jane Doe" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Email Address</label>
+                        <label class="form-label">Email Address</label>
                         <input type="email" name="email" class="form-control" placeholder="student@univ.edu" required>
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Roll Number</label>
+                            <label class="form-label">Roll Number</label>
                             <input type="text" name="roll_number" class="form-control" placeholder="CS2026-101" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Password</label>
+                            <label class="form-label">Password</label>
                             <input type="password" name="password" class="form-control" placeholder="Default: student123">
                         </div>
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Department</label>
+                            <label class="form-label">Department</label>
                             <select name="department_id" class="form-select" required>
                                 <option value="" disabled selected>Select Dept</option>
                                 {% for dept in departments %}
@@ -108,7 +106,7 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Assigned Class</label>
+                            <label class="form-label">Assigned Class</label>
                             <select name="class_id" class="form-select" required>
                                 <option value="" disabled selected>Select Class</option>
                                 {% for cls in classes %}
@@ -118,9 +116,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4">Create Account</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-glass-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-glass-primary px-4">Create Account</button>
                 </div>
             </form>
         </div>

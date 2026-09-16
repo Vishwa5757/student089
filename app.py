@@ -4,12 +4,14 @@ from config import Config
 from database.db_config import db
 from routes import auth_bp, admin_bp, faculty_bp, student_bp
 
-def create_app():
+def create_app(config_class=Config):
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(config_class)
 
     # Initialize extensions
     db.init_app(app)
+    from utils.email_service import mail
+    mail.init_app(app)
 
     # Register blueprints
     app.register_blueprint(auth_bp)

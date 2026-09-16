@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from database.db_config import db
 from models import Faculty, Task, TaskStatus, Class, Student, Notification
 from utils.decorators import role_required
+from utils.email_service import send_task_assigned_email
 
 faculty_bp = Blueprint('faculty', __name__, url_prefix='/faculty')
 
@@ -14,11 +15,13 @@ def get_current_faculty():
 def dashboard():
     faculty = get_current_faculty()
     if not faculty:
-        flash('Faculty profile not found.', 'danger')
+        session.clear()
+        flash('Faculty profile not found. Please log in again.', 'danger')
         return redirect(url_for('auth.login'))
 
     tasks = Task.query.filter_by(faculty_id=faculty.id).order_by(Task.deadline.asc()).all()
     classes = Class.query.filter_by(department_id=faculty.department_id).all()
+    students = Student.query.all()
 
     # Calculate statistics
     total_tasks = len(tasks)
@@ -39,6 +42,7 @@ def dashboard():
                            faculty=faculty,
                            tasks=tasks,
                            classes=classes,
+                           students=students,
                            total_tasks=total_tasks,
                            active_tasks=active_tasks,
                            expired_tasks=expired_tasks,
@@ -52,6 +56,7 @@ def create_task():
     title = request.form.get('title', '').strip()
     description = request.form.get('description', '').strip()
     class_id = request.form.get('class_id')
+    selected_student_id = request.form.get('student_id')
     deadline_str = request.form.get('deadline')
     priority = request.form.get('priority', 'Medium')
 
@@ -66,18 +71,38 @@ def create_task():
     db.session.add(task)
     db.session.flush()
 
-    # Automatically generate TaskStatus records & Notifications for all students in assigned class
-    students = Student.query.filter_by(class_id=class_id).all()
-    for student in students:
+    # Determine assigned students (Specific student vs entire class)
+    if selected_student_id and selected_student_id != 'all':
+        assigned_students = Student.query.filter_by(id=selected_student_id).all()
+    else:
+        assigned_students = Student.query.filter_by(class_id=class_id).all()
+
+    for student in assigned_students:
         status_record = TaskStatus(task_id=task.id, student_id=student.id, status='Pending')
         db.session.add(status_record)
 
-        # Notify student
-        notif = Notification(user_id=student.user_id, message=f'New Task Assigned: "{title}" due on {deadline.strftime("%b %d, %Y %I:%M %p")}')
+        # Stage 1: Notify student ONCE upon task creation (In-App + Email)
+        formatted_deadline = deadline.strftime("%d %B %Y, %I:%M %p")
+        notif_msg = f'New task assigned: {title}. Deadline: {formatted_deadline}.'
+        notif = Notification(
+            user_id=student.user_id,
+            task_id=task.id,
+            notification_type='TASK_ASSIGNED',
+            message=notif_msg
+        )
         db.session.add(notif)
 
+        # Dispatch initial assignment email
+        if student.user and student.user.email:
+            send_task_assigned_email(
+                to_email=student.user.email,
+                task_title=title,
+                description=description,
+                deadline_str=formatted_deadline
+            )
+
     db.session.commit()
-    flash(f'Task "{title}" created and assigned to {len(students)} student(s)!', 'success')
+    flash(f'Task "{title}" created and assigned to {len(assigned_students)} student(s)!', 'success')
     return redirect(url_for('faculty.dashboard'))
 
 

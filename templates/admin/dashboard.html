@@ -8,129 +8,207 @@
 <div class="row g-3 mb-4">
     <div class="col-md-6 col-lg-3">
         <div class="stat-card primary">
-            <div class="h6 text-white-50 text-uppercase fw-semibold">Total Students</div>
-            <div class="display-5 fw-bold mb-0">{{ total_students }}</div>
-            <div class="small mt-2"><i class="fa-solid fa-users me-1"></i> Enrolled in classes</div>
+            <div class="h6 text-white-50 text-uppercase fw-semibold" style="font-size: 0.75rem;">Total Students</div>
+            <div class="display-5 fw-bold mb-0 text-white">{{ total_students }}</div>
+            <div class="small mt-2 text-indigo-300"><i class="fa-solid fa-users me-1"></i> Enrolled in classes</div>
             <i class="fa-solid fa-user-graduate icon-bg"></i>
         </div>
     </div>
 
     <div class="col-md-6 col-lg-3">
         <div class="stat-card secondary">
-            <div class="h6 text-white-50 text-uppercase fw-semibold">Faculty Members</div>
-            <div class="display-5 fw-bold mb-0">{{ total_faculty }}</div>
-            <div class="small mt-2"><i class="fa-solid fa-chalkboard-user me-1"></i> Active instructors</div>
+            <div class="h6 text-white-50 text-uppercase fw-semibold" style="font-size: 0.75rem;">Faculty Members</div>
+            <div class="display-5 fw-bold mb-0 text-white">{{ total_faculty }}</div>
+            <div class="small mt-2 text-cyan-300"><i class="fa-solid fa-chalkboard-user me-1"></i> Active instructors</div>
             <i class="fa-solid fa-chalkboard-user icon-bg"></i>
         </div>
     </div>
 
     <div class="col-md-6 col-lg-3">
         <div class="stat-card success">
-            <div class="h6 text-white-50 text-uppercase fw-semibold">Departments</div>
-            <div class="display-5 fw-bold mb-0">{{ total_departments }}</div>
-            <div class="small mt-2"><i class="fa-solid fa-building-columns me-1"></i> {{ total_classes }} Classes active</div>
+            <div class="h6 text-white-50 text-uppercase fw-semibold" style="font-size: 0.75rem;">Departments</div>
+            <div class="display-5 fw-bold mb-0 text-white">{{ total_departments }}</div>
+            <div class="small mt-2 text-emerald-300"><i class="fa-solid fa-building-columns me-1"></i> {{ total_classes }} Classes active</div>
             <i class="fa-solid fa-building-columns icon-bg"></i>
         </div>
     </div>
 
     <div class="col-md-6 col-lg-3">
         <div class="stat-card warning">
-            <div class="h6 text-white-50 text-uppercase fw-semibold">Total Reminders</div>
-            <div class="display-5 fw-bold mb-0">{{ total_tasks }}</div>
-            <div class="small mt-2"><i class="fa-solid fa-bell me-1"></i> System-wide tasks</div>
+            <div class="h6 text-white-50 text-uppercase fw-semibold" style="font-size: 0.75rem;">Total Reminders</div>
+            <div class="display-5 fw-bold mb-0 text-white">{{ total_tasks }}</div>
+            <div class="small mt-2 text-amber-300"><i class="fa-solid fa-bell me-1"></i> System-wide tasks</div>
             <i class="fa-solid fa-bell icon-bg"></i>
         </div>
     </div>
 </div>
 
-<!-- Quick Actions Banner -->
-<div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-    <h5 class="fw-bold mb-3"><i class="fa-solid fa-bolt text-warning me-2"></i>Quick Administrative Actions</h5>
+<!-- Quick Actions Glass Banner -->
+<div class="glass-panel p-4 mb-4">
+    <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-bolt text-warning me-2"></i>Quick Administrative Actions</h5>
     <div class="d-flex flex-wrap gap-2">
-        <a href="{{ url_for('admin.manage_students') }}" class="btn btn-primary rounded-3">
+        <a href="{{ url_for('admin.manage_students') }}" class="btn btn-glass-primary">
             <i class="fa-solid fa-user-plus me-2"></i>Manage / Add Students
         </a>
-        <a href="{{ url_for('admin.manage_faculty') }}" class="btn btn-indigo text-white rounded-3" style="background: #6366f1;">
+        <a href="{{ url_for('admin.manage_faculty') }}" class="btn btn-glass-secondary">
             <i class="fa-solid fa-user-tie me-2"></i>Manage / Add Faculty
         </a>
-        <a href="{{ url_for('admin.manage_departments') }}" class="btn btn-dark rounded-3">
+        <a href="{{ url_for('admin.manage_departments') }}" class="btn btn-glass-secondary">
             <i class="fa-solid fa-folder-plus me-2"></i>Departments & Classes
         </a>
     </div>
 </div>
 
-<!-- Activity Tables Row -->
+<!-- Dark Theme Charts Row -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="glass-panel p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-white mb-0"><i class="fa-solid fa-chart-pie me-2 text-indigo"></i>System Users Ratio</h6>
+            </div>
+            <div style="position: relative; height:260px;">
+                <canvas id="usersRatioChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="glass-panel p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-white mb-0"><i class="fa-solid fa-chart-bar me-2 text-cyan"></i>Department Academic Breakdown</h6>
+            </div>
+            <div style="position: relative; height:260px;">
+                <canvas id="departmentsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Chart defaults for dark glass theme
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.08)';
+
+        const ctxRatio = document.getElementById('usersRatioChart').getContext('2d');
+        new Chart(ctxRatio, {
+            type: 'doughnut',
+            data: {
+                labels: ['Students', 'Faculty'],
+                datasets: [{
+                    data: [{{ total_students }}, {{ total_faculty }}],
+                    backgroundColor: ['#6366f1', '#06b6d4'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#f8fafc' } }
+                }
+            }
+        });
+
+        const ctxDept = document.getElementById('departmentsChart').getContext('2d');
+        new Chart(ctxDept, {
+            type: 'bar',
+            data: {
+                labels: ['Departments', 'Classes', 'Active Tasks'],
+                datasets: [{
+                    label: 'Count',
+                    data: [{{ total_departments }}, {{ total_classes }}, {{ total_tasks }}],
+                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, color: '#94a3b8' },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+<!-- Activity Glass Tables Row -->
 <div class="row g-4">
     <!-- Recent Students -->
     <div class="col-lg-6">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
-            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                <h6 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-user-graduate me-2 text-primary"></i>Recently Registered Students</h6>
-                <a href="{{ url_for('admin.manage_students') }}" class="btn btn-sm btn-light">View All</a>
+        <div class="glass-panel overflow-hidden h-100">
+            <div class="p-3 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold text-white mb-0"><i class="fa-solid fa-user-graduate me-2 text-indigo"></i>Recently Registered Students</h6>
+                <a href="{{ url_for('admin.manage_students') }}" class="btn btn-sm btn-glass-secondary">View All</a>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="ps-3">Student Name</th>
-                                <th>Roll Number</th>
-                                <th>Class</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for student in recent_students %}
-                            <tr>
-                                <td class="ps-3 fw-semibold">
-                                    {{ student.user.full_name }}
-                                    <div class="text-muted small">{{ student.user.email }}</div>
-                                </td>
-                                <td><span class="badge bg-light text-dark border">{{ student.roll_number }}</span></td>
-                                <td>{{ student.class_assigned.class_code if student.class_assigned else 'N/A' }}</td>
-                            </tr>
-                            {% else %}
-                            <tr><td colspan="3" class="text-center text-muted py-3">No students registered yet.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+            <div class="table-responsive">
+                <table class="table glass-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Student Name</th>
+                            <th>Roll Number</th>
+                            <th>Class</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in recent_students %}
+                        <tr>
+                            <td class="ps-3 fw-semibold text-white">
+                                {{ student.user.full_name }}
+                                <div class="text-slate-400 small">{{ student.user.email }}</div>
+                            </td>
+                            <td><span class="badge bg-dark border border-white border-opacity-10">{{ student.roll_number }}</span></td>
+                            <td>{{ student.class_assigned.class_code if student.class_assigned else 'N/A' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center text-slate-400 py-3">No students registered yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <!-- Recent Faculty -->
     <div class="col-lg-6">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
-            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                <h6 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-chalkboard-user me-2 text-indigo"></i>Faculty Directory</h6>
-                <a href="{{ url_for('admin.manage_faculty') }}" class="btn btn-sm btn-light">View All</a>
+        <div class="glass-panel overflow-hidden h-100">
+            <div class="p-3 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold text-white mb-0"><i class="fa-solid fa-chalkboard-user me-2 text-cyan"></i>Faculty Directory</h6>
+                <a href="{{ url_for('admin.manage_faculty') }}" class="btn btn-sm btn-glass-secondary">View All</a>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="ps-3">Faculty Name</th>
-                                <th>Designation</th>
-                                <th>Department</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for faculty in recent_faculty %}
-                            <tr>
-                                <td class="ps-3 fw-semibold">
-                                    {{ faculty.user.full_name }}
-                                    <div class="text-muted small">{{ faculty.user.email }}</div>
-                                </td>
-                                <td>{{ faculty.designation }}</td>
-                                <td><span class="badge bg-secondary">{{ faculty.department.dept_code if faculty.department else 'N/A' }}</span></td>
-                            </tr>
-                            {% else %}
-                            <tr><td colspan="3" class="text-center text-muted py-3">No faculty registered yet.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+            <div class="table-responsive">
+                <table class="table glass-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Faculty Name</th>
+                            <th>Designation</th>
+                            <th>Department</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for faculty in recent_faculty %}
+                        <tr>
+                            <td class="ps-3 fw-semibold text-white">
+                                {{ faculty.user.full_name }}
+                                <div class="text-slate-400 small">{{ faculty.user.email }}</div>
+                            </td>
+                            <td>{{ faculty.designation }}</td>
+                            <td><span class="badge px-2 py-1 text-white" style="background: rgba(6, 182, 212, 0.3); border: 1px solid rgba(6, 182, 212, 0.4);">{{ faculty.department.dept_code if faculty.department else 'N/A' }}</span></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center text-slate-400 py-3">No faculty registered yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
