@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Smart Student Reminder System{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+        <div class="container-fluid px-4">
+            <button class="btn btn-outline-light d-lg-none me-2" id="sidebarToggle" type="button">
+                <i class="bi bi-list fs-5"></i>
+            </button>
+            
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('auth.index') }}">
+                <span class="brand-icon"><i class="bi bi-clock-history"></i></span>
+                <span>Smart Student Reminder</span>
+            </a>
+
+            <div class="ms-auto d-flex align-items-center gap-3">
+                {% if session.get('user_id') %}
+                    {% if session.get('user_role') == 'student' %}
+                        <!-- Notification Bell Button -->
+                        <a href="{{ url_for('student.notifications') }}" class="btn btn-outline-light position-relative btn-sm me-2" title="Notifications">
+                            <i class="bi bi-bell-fill fs-6"></i>
+                            {% if unread_notification_count > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    {{ unread_notification_count }}
+                                    <span class="visually-hidden">unread notifications</span>
+                                </span>
+                            {% endif %}
+                        </a>
+                    {% endif %}
+
+                    <div class="text-light d-none d-sm-block text-end">
+                        <div class="fw-semibold fs-6">{{ session.get('user_name') }}</div>
+                        <small class="text-secondary text-uppercase fw-bold" style="font-size: 0.7rem;">{{ session.get('user_role') }}</small>
+                    </div>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                {% endif %}
+            </div>
+
+        </div>
+    </nav>
+
+    <!-- Main Layout Shell -->
+    <div class="layout-wrapper">
+        {% if session.get('user_id') %}
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="p-3 text-uppercase text-secondary fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">
+                Main Menu
+            </div>
+            <ul class="nav nav-pills flex-column mb-auto">
+                {% if session.get('user_role') == 'admin' %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('admin.users') }}" class="nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}">
+                            <i class="bi bi-people-fill"></i> User Management
+                        </a>
+                    </li>
+                {% elif session.get('user_role') == 'professor' %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('professor.dashboard') }}" class="nav-link {% if request.endpoint == 'professor.dashboard' %}active{% endif %}">
+                            <i class="bi bi-speedometer2"></i> Professor Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('professor.create_task') }}" class="nav-link {% if request.endpoint == 'professor.create_task' %}active{% endif %}">
+                            <i class="bi bi-plus-circle-fill"></i> Create New Task
+                        </a>
+                    </li>
+                {% elif session.get('user_role') == 'student' %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('student.dashboard') }}" class="nav-link {% if request.endpoint == 'student.dashboard' %}active{% endif %}">
+                            <i class="bi bi-journal-check"></i> My Assigned Tasks
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('student.notifications') }}" class="nav-link {% if request.endpoint == 'student.notifications' %}active{% endif %}">
+                            <i class="bi bi-bell"></i> Notification Center
+                            {% if unread_notification_count > 0 %}
+                                <span class="badge bg-danger ms-auto">{{ unread_notification_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                {% endif %}
+
+            </ul>
+
+            <div class="p-3 mt-auto border-top border-secondary">
+                <small class="text-secondary d-block">Smart Student Reminder v1.0</small>
+                <small class="text-secondary">College Task System</small>
+            </div>
+        </aside>
+        {% endif %}
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div class="container-fluid">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show d-flex align-items-center shadow-sm" role="alert">
+                                <i class="bi {% if category == 'success' %}bi-check-circle-fill me-2{% elif category == 'danger' %}bi-exclamation-triangle-fill me-2{% else %}bi-info-circle-fill me-2{% endif %} fs-5"></i>
+                                <div>{{ message }}</div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Main JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

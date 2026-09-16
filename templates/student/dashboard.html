@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - Smart Student Reminder{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h3 class="fw-bold mb-1">Student Dashboard</h3>
+        <p class="text-secondary mb-0">Track your assigned course tasks, view deadlines, and complete your submissions.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('student.notifications') }}" class="btn btn-outline-primary position-relative d-inline-flex align-items-center gap-2">
+            <i class="bi bi-bell-fill"></i> Notification Center
+            {% if unread_notification_count > 0 %}
+                <span class="badge bg-danger rounded-pill">{{ unread_notification_count }}</span>
+            {% endif %}
+        </a>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Assigned Tasks</span>
+                    <h3 class="fw-bold mt-2 mb-0">{{ total_count }}</h3>
+                </div>
+                <div class="stat-icon icon-blue">
+                    <i class="bi bi-journal-text"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="stat-card border-warning-subtle">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Pending Tasks</span>
+                    <h3 class="fw-bold mt-2 mb-0 text-danger">🔴 {{ pending_count }}</h3>
+                </div>
+                <div class="stat-icon icon-amber">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="stat-card border-success-subtle">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Completed Tasks</span>
+                    <h3 class="fw-bold mt-2 mb-0 text-success">🟢 {{ completed_count }}</h3>
+                </div>
+                <div class="stat-icon icon-green">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Tasks Section -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+        <h5 class="fw-bold mb-0 text-dark">
+            <span class="me-2">🔴</span> Pending Tasks 
+            <span class="badge bg-danger-subtle text-danger ms-2" style="font-size: 0.8rem;">{{ pending_count }} Action Required</span>
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table custom-table mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Task Title & Description</th>
+                        <th>Assigned By</th>
+                        <th>Deadline</th>
+                        <th>Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if pending_tasks %}
+                        {% for status_rec, task, prof in pending_tasks %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark fs-6 mb-1">{{ task.title }}</div>
+                                    <p class="text-muted small mb-0 text-truncate" style="max-width: 320px;">
+                                        {{ task.description or 'No detailed description provided.' }}
+                                    </p>
+                                    <button class="btn btn-link btn-sm p-0 mt-1 text-decoration-none" data-bs-toggle="modal" data-bs-target="#taskModal{{ task.id }}">
+                                        Read full description &raquo;
+                                    </button>
+                                </td>
+                                <td>
+                                    <span class="fw-medium text-secondary"><i class="bi bi-person-circle me-1"></i>{{ prof.name }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning-subtle text-dark border border-warning px-2 py-1">
+                                        <i class="bi bi-calendar-event me-1"></i>{{ task.deadline.strftime('%b %d, %Y') }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2 fw-bold">
+                                        🔴 Pending
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <form action="{{ url_for('student.complete_task', status_id=status_rec.id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-success fw-semibold d-inline-flex align-items-center gap-1 shadow-sm">
+                                            <i class="bi bi-check-circle-fill"></i> Complete Task
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+
+                            <!-- Task Detail Modal -->
+                            <div class="modal fade" id="taskModal{{ task.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title fw-bold"><i class="bi bi-journal-text me-2"></i>{{ task.title }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <small class="text-muted text-uppercase fw-bold d-block mb-1">Assigned By</small>
+                                                <div class="fw-semibold">{{ prof.name }} ({{ prof.email }})</div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <small class="text-muted text-uppercase fw-bold d-block mb-1">Submission Deadline</small>
+                                                <div class="badge bg-warning-subtle text-dark border border-warning fs-6">
+                                                    <i class="bi bi-calendar-event me-1"></i>{{ task.deadline.strftime('%B %d, %Y') }}
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <small class="text-muted text-uppercase fw-bold d-block mb-1">Instructions / Description</small>
+                                                <p class="text-secondary bg-light p-3 rounded-3 border mb-0" style="white-space: pre-line;">
+                                                    {{ task.description or 'No instructions provided.' }}
+                                                </p>
+                                            </div>
+                                            <div class="alert alert-info small mb-0">
+                                                <i class="bi bi-bell-fill me-1"></i> Completing this task will immediately stop automated reminders.
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                            <form action="{{ url_for('student.complete_task', status_id=status_rec.id) }}" method="POST" class="d-inline">
+                                                <button type="submit" class="btn btn-success fw-semibold">
+                                                    <i class="bi bi-check-circle-fill me-1"></i> Mark Completed Now
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-check2-all fs-1 text-success d-block mb-2"></i>
+                                You have no pending tasks! Great job keeping up to date.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Completed Tasks Section -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+        <h5 class="fw-bold mb-0 text-dark">
+            <span class="me-2">🟢</span> Completed Tasks 
+            <span class="badge bg-success-subtle text-success ms-2" style="font-size: 0.8rem;">{{ completed_count }} Finished</span>
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table custom-table mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Task Title</th>
+                        <th>Assigned By</th>
+                        <th>Deadline</th>
+                        <th>Status</th>
+                        <th>Completed Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if completed_tasks %}
+                        {% for status_rec, task, prof in completed_tasks %}
+                            <tr class="bg-light bg-opacity-50">
+                                <td>
+                                    <div class="fw-bold text-dark text-decoration-line-through">{{ task.title }}</div>
+                                    <small class="text-muted text-truncate d-block" style="max-width: 300px;">{{ task.description or 'No description' }}</small>
+                                </td>
+                                <td>
+                                    <span class="text-secondary small">{{ prof.name }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-secondary border">
+                                        <i class="bi bi-calendar-event me-1"></i>{{ task.deadline.strftime('%b %d, %Y') }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success-subtle text-success border border-success px-3 py-2 fw-bold">
+                                        🟢 Completed
+                                    </span>
+                                </td>
+                                <td class="text-muted small">
+                                    <i class="bi bi-clock-history me-1"></i>
+                                    {{ status_rec.completed_at.strftime('%Y-%m-%d %H:%M') if status_rec.completed_at else 'Completed' }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                No completed tasks recorded yet.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Widget Section -->
+{% if notifications %}
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+        <h5 class="fw-bold mb-0"><i class="bi bi-bell-fill me-2 text-warning"></i>Recent Notifications</h5>
+        <a href="{{ url_for('student.notifications') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+    </div>
+    <div class="list-group list-group-flush">
+        {% for n in notifications[:5] %}
+            <div class="list-group-item d-flex justify-content-between align-items-center py-3 {% if not n.is_read %}bg-light fw-medium{% endif %}">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="fs-5">
+                        {% if 'Reminder' in n.message %}⏰{% else %}🔔{% endif %}
+                    </span>
+                    <div>
+                        <div>{{ n.message }}</div>
+                        <small class="text-muted" style="font-size: 0.75rem;">{{ n.created_at.strftime('%b %d, %Y at %H:%M') }}</small>
+                    </div>
+                </div>
+                {% if not n.is_read %}
+                    <form action="{{ url_for('student.mark_read', notification_id=n.id) }}" method="POST">
+                        <button type="submit" class="btn btn-sm btn-light border" title="Mark as read">
+                            <i class="bi bi-check2"></i> Mark Read
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

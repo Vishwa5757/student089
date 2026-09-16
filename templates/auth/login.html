@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Smart Student Reminder System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-body">
+
+    <div class="login-card">
+        <div class="login-header">
+            <div class="brand-icon mx-auto mb-3" style="width: 54px; height: 54px; font-size: 1.75rem;">
+                <i class="bi bi-clock-history"></i>
+            </div>
+            <h4 class="fw-bold mb-1">Smart Student Reminder</h4>
+            <p class="text-secondary small mb-0">College Task & Reminder Management</p>
+        </div>
+
+        <div class="p-4">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show small mb-3" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('auth.login') }}" method="POST">
+                <div class="mb-3">
+                    <label for="email" class="form-label fw-semibold small text-secondary">Email Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-muted"></i></span>
+                        <input type="email" class="form-control border-start-0 ps-0" id="email" name="email" placeholder="name@college.edu" required autofocus>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" class="form-label fw-semibold small text-secondary">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
+                        <input type="password" class="form-control border-start-0 ps-0" id="password" name="password" placeholder="Enter your password" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2">
+                    <i class="bi bi-box-arrow-in-right"></i> Log In
+                </button>
+            </form>
+
+            <!-- Sample Credentials Helper Box -->
+            <div class="mt-4 pt-3 border-top">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="badge bg-secondary">Demo Accounts</span>
+                    <small class="text-muted" style="font-size: 0.75rem;">Click to copy</small>
+                </div>
+                <div class="bg-light p-2 rounded-3 border small">
+                    <div class="mb-1 d-flex justify-content-between">
+                        <span><strong>Admin:</strong> admin@college.edu</span>
+                        <span class="text-muted">admin123</span>
+                    </div>
+                    <div class="mb-1 d-flex justify-content-between">
+                        <span><strong>Professor:</strong> prof.smith@college.edu</span>
+                        <span class="text-muted">prof123</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span><strong>Student:</strong> student.john@college.edu</span>
+                        <span class="text-muted">student123</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
