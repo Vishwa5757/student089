@@ -35,11 +35,13 @@ document.addEventListener('DOMContentLoaded', function () {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // 4. Live Unread Notifications Polling for Student Dashboard & Top Bell Dropdown
+    // 4. Live Unread Notifications Polling & Pop-Up Toasts for Student Dashboard
     const path = window.location.pathname;
     const isStudentPath = path.startsWith('/student/') || path === '/student';
     if (isStudentPath && document.getElementById('notifDropdownBtn')) {
-        setInterval(function() {
+        let seenNotifIds = new Set(JSON.parse(localStorage.getItem('seenNotifIds') || '[]'));
+
+        function checkNotifications() {
             fetch('/student/api/notifications/unread')
                 .then(response => response.json())
                 .then(data => {
@@ -48,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const bannerCard = document.getElementById('notification-banner-card');
                     const dropdownList = document.getElementById('dropdown-notif-list');
                     const dashboardList = document.getElementById('notification-list');
+                    const toastEl = document.getElementById('reminderToast');
 
                     if (data.notifications && data.notifications.length > 0) {
                         const count = data.notifications.length;
@@ -58,6 +61,37 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                         if (dashboardBadge) dashboardBadge.textContent = count;
                         if (bannerCard) bannerCard.style.display = 'block';
+
+                        // Check for brand new notifications to trigger pop-up
+                        let latestNewNotif = null;
+                        data.notifications.forEach(n => {
+                            if (!seenNotifIds.has(n.id)) {
+                                seenNotifIds.add(n.id);
+                                latestNewNotif = n;
+                            }
+                        });
+
+                        // Save updated seen notification IDs
+                        localStorage.setItem('seenNotifIds', JSON.stringify(Array.from(seenNotifIds)));
+
+                        // Show pop-up toast for new notification
+                        if (latestNewNotif && toastEl) {
+                            const toastTitle = document.getElementById('toastHeaderTitle');
+                            const toastMsg = document.getElementById('toastMessage');
+                            const toastTime = document.getElementById('toastTimeAgo');
+
+                            if (latestNewNotif.message.includes('New task assigned')) {
+                                if (toastTitle) toastTitle.textContent = '🔔 NEW TASK ASSIGNED';
+                            } else {
+                                if (toastTitle) toastTitle.textContent = '🔔 TASK REMINDER';
+                            }
+
+                            if (toastMsg) toastMsg.textContent = latestNewNotif.message;
+                            if (toastTime) toastTime.textContent = latestNewNotif.created_at || 'Just now';
+
+                            const bsToast = bootstrap.Toast.getOrCreateInstance(toastEl);
+                            bsToast.show();
+                        }
 
                         // Render in top bell dropdown
                         if (dropdownList) {
@@ -89,7 +123,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 })
                 .catch(err => console.log('Notification polling error:', err));
-        }, 15000); // Poll every 15 seconds
+        }
+
+        checkNotifications();
+        setInterval(checkNotifications, 10000); // Check every 10 seconds
     }
 });
 
